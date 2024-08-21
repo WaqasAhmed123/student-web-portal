@@ -9,9 +9,9 @@ namespace StudentPortalWeb.Controllers
             return View();
         }
 
-        public Task<IActionResult> Register()
-        {
+        //public Task<IActionResult> Register()
+        //{
 
-        }
+        //}
     }
 }
