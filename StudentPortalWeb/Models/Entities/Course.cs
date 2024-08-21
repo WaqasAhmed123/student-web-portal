@@ -3,7 +3,7 @@
     public class Course
     {
         public Guid CourseId { get; set; } 
-        public string CourseName { get; set; }    
+        public string CourseName { get; set; } = String.Empty;
         public int CourseCode{ get; set; }
 
         // Navigation property for Enrolments
