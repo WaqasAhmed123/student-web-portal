@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using StudentPortalWeb.Models.Entities;
@@ -30,13 +31,15 @@ namespace StudentPortalWeb.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<Student> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
         public RegisterModel(
             UserManager<Student> userManager,
             IUserStore<Student> userStore,
             SignInManager<Student> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -44,6 +47,7 @@ namespace StudentPortalWeb.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _roleManager = roleManager;
         }
 
         /// <summary>
@@ -80,6 +84,28 @@ namespace StudentPortalWeb.Areas.Identity.Pages.Account
             [Display(Name = "Email")]
             public string Email { get; set; }
 
+            [Required]
+            [Display(Name = "Name")]
+            public string Name { get; set; }
+
+            [Required]
+            [Display(Name = "Department")]
+            public string Department { get; set; }
+
+            public IEnumerable<SelectListItem> DepartmentList { get; set; }
+
+
+            [Required]
+            [Display(Name = "Phone Number")]
+            public string PhoneNumber { get; set; }
+
+            [Required]
+            [Display(Name = "Role")]
+            public string Role { get; set; }
+
+            public IEnumerable<SelectListItem> RoleList { get; set; }
+
+
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
@@ -105,7 +131,16 @@ namespace StudentPortalWeb.Areas.Identity.Pages.Account
         {
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+            var departments = new List<String> { "Computer Science", "Statistics", "Maths" };
+            Input = new InputModel()
+            {
+                RoleList = _roleManager.Roles.Select(x => x.Name).Select(i => new SelectListItem { Text = i, Value = i }),
+                DepartmentList = departments.Select(i => new SelectListItem { Text = i, Value = i })
+            };
         }
+
+        
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
@@ -117,12 +152,17 @@ namespace StudentPortalWeb.Areas.Identity.Pages.Account
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+                user.Name = Input.Name;
+                user.PhoneNumber = Input.PhoneNumber;
+                user.Department = Input.Department;
+
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
 
+                    await _userManager.AddToRoleAsync(user, Input.Role);
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
@@ -150,6 +190,10 @@ namespace StudentPortalWeb.Areas.Identity.Pages.Account
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
             }
+
+            // Repopulate dropdown lists on validation error
+            Input.RoleList = _roleManager.Roles.Select(x => x.Name).Select(i => new SelectListItem { Text = i, Value = i });
+            Input.DepartmentList = new List<string> { "Computer Science", "Statistics", "Maths" }.Select(i => new SelectListItem { Text = i, Value = i });
 
             // If we got this far, something failed, redisplay form
             return Page();

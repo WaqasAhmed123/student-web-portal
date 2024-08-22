@@ -5,20 +5,20 @@ using StudentPortalWeb.Models;
 using StudentPortalWeb.Models.Entities;
 using System.Reflection.Metadata.Ecma335;
 
-namespace StudentPortalWeb.Controllers
+namespace StudentPortalWeb.Controllers.Admin
 {
-    public class CourseController : Controller
+    public class ManageStudentController : Controller
     {
         private readonly ApplicationDbContext _dbContext;
 
-        public CourseController(ApplicationDbContext dbContext)
+        public ManageStudentController(ApplicationDbContext dbContext)
         {
             _dbContext = dbContext;
         }
-        //public IActionResult Add()
-        //{
-        //    return View();
-        //}
+        public IActionResult Add()
+        {
+            return View();
+        }
 
 
         ////add a user
@@ -38,12 +38,23 @@ namespace StudentPortalWeb.Controllers
         //}
 
         ////get all students
-        //[HttpGet]
-        //public async Task<IActionResult> List()
-        //{
-        //    var students = await _dbContext.Students.ToListAsync();
-        //    return View(students);
-        //}
+        [HttpGet]                     
+        public async Task<IActionResult> List()
+        {
+            //var students = await _dbContext.Users.ToListAsync();
+
+            //get student role id
+            var studentRoleId = await _dbContext.Roles
+        .Where(r => r.Name == "Student")
+        .Select(r => r.Id)
+        .FirstOrDefaultAsync();
+
+            var students = await _dbContext.Users
+                .Where(u => u.UserRoles.Any(ur => ur.RoleId == studentRoleId))
+                .ToListAsync();
+            return View("~/Views/Admin/ManageStudent/List.cshtml", students);
+            //return View(students);
+        }
 
         ////get particular student for editing
         //[HttpGet]
@@ -52,7 +63,7 @@ namespace StudentPortalWeb.Controllers
         //    var student = await _dbContext.Students.FindAsync(id);
         //    return View(student);
         //}
-            
+
         ////editing and save
         //[HttpPost]
         //public async Task<IActionResult> Edit(Student viewModel)

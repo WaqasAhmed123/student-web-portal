@@ -24,13 +24,15 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                            @*
-                            <!!
-                            </li><li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Students" asp-action="List">All Students</a>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="AppRoles" asp-action="Index">Application Roles</a>
+                        </li>
+                            @if (User.IsInRole("Admin"))
+                            {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="ManageStudent" asp-action="List">All Students</a>
                             </li>
-                            !!>
-                            *@
+                            }
 
                     </ul>
                 </div>
